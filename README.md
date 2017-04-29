@@ -20,3 +20,4 @@ git clone https://github.com/seyuf/WebRTC.git
     * The other **http://{dev server local ip}:9000** (This one must use firefox as chrome does not allow mediaSharing on http only https)
   
   
+[Demo Preview](https://github.com/seyuf/WebRTC/blob/master/public/images/webrtc.png)
