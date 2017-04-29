@@ -1,0 +1,75 @@
+<div class="container container-fluid" id="event" style="background-color:white; border-radius:1%;">
+    <div class="page-header row">
+        <div class="col-md-12 text-center">
+            <h5 class="atelierLabel">{{event.title}}
+                <br><small>
+                    <span ng-bind="event.date | date:'dd/MM/yyyy'"></span>
+                    (<span ng-bind="event.start_time | date:'HH:mm'"></span> - <span ng-bind="event.end_time | date:'HH:mm'"></span>)
+                </small>
+            </h5>
+            <p>{{event.description}}</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7 text-center" style="padding-right:0;" ng-show="event.gender == 'chat_streaming'">
+            <!--img src="assets/images/testwebinar.JPG"/-->
+
+            <div class="row">
+                <video class="col col-md-4" ng-src="{{vm.streamUrl}}" autoplay></video>
+                <video class="col col-md-8" ng-src="{{vm.streamRemoteUrl}}" autoplay></video>
+                <pre>localurl = {{vm.streamUrl}}</pre>
+                <pre>Remoteurl = {{vm.streamRemoteUrl}}</pre>
+            </div>
+            <div class="row">
+                <div class="text-center col col-md-12">
+                    <button class="btn btn--l btn--raised btn--blue" ng-click="startStreaming()">
+                        Launch Video streaming
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div ng-class="(event.gender=='chat_streaming')?'col-md-5 text-left':'col-md-12'" style="padding-left:0;">
+
+            <div ng-class="(event.gender=='chat_streaming')?'panel panel-default chat':'panel panel-default chat only_chat'">
+                <div class="panel-heading">
+                    <h4>Chat
+
+                        <i tooltip-template="" tooltip-html-unsafe='On the <b>Top!</b> <p ng-repeat="member in messages.members">membres: {{messages.members}}</p>'  popover-trigger="mouseenter" class="glyphicon glyphicon-user pull-right" style="cursor:pointer;">
+                        <span class="badge badge-notify">{{ messages.members.length}}</span></i>
+                    </h4>
+                </div>
+                <div class="panel-body scroll-theme" schroll-bottom="messages.collection" style="max-height:400px;min-height:400px;overflow-y:scroll;">
+                    <ul class="chat">
+
+                        <li ng-repeat="message in messages.collection" class="{{message.me? 'right clearfix' : 'left clearfix' }}">
+                        <span class="{{message.me? 'chat-img pull-right' : 'chat-img pull-left' }}">
+                            <img ng-src="{{message.me?'http://placehold.it/50/FA6F57/fff&text=Moi':'http://placehold.it/50/55C1E7/fff&text=Lui'}}" alt="User Avatar" class="img-circle" />
+                        </span>
+                            <div class="chat-body clearfix">
+                                <div class="header">
+                                    <strong class="{{message.me? 'pull-right primary-font' : 'primary-font' }}">{{message.user}}</strong>
+                                    <small class="{{message.me? 'text-muted' : 'pull-right text-muted'}}">
+                                        <span class="glyphicon glyphicon-time"></span>{{message.timeStamp | timeago}}
+                                    </small>
+                                </div>
+                                <p>{{message.text}}</p>
+                            </div>
+                        </li>
+
+
+                    </ul>
+
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input ng-model="new_message" ng-enter="submit(new_message)" type="text" class="form-control" required>
+                        <span class="input-group-btn">
+                            <button  class="btn btn-default" type="button" ng-click="submit(new_message)" >Envoyer</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
