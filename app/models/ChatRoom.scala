@@ -45,12 +45,12 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
 
   def receive = {
     case Join(username, eventRoom) => { members = members + username
-      broadcastMessage(chatBot, s"$username a rejoint le tchat", eventRoom)
+      broadcastMessage(chatBot, s"$username has joined", eventRoom)
       sender ! chatEnumerator
     }
     case Quit(username, eventRoom) => {
       members = members - username
-      broadcastMessage(chatBot, s"$username a quitté le tchat", eventRoom)
+      broadcastMessage(chatBot, s"$username has left", eventRoom)
       //members = members - username
     }
     case Talk(username, text, eventRoom) => broadcastMessage(username, text, eventRoom)
