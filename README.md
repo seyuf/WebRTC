@@ -4,6 +4,7 @@ Dummy webrtc legacy example
 Requirements 
 ------------------------------------------------------------
 - Java 8
+- Mongodb (tested under 3.4)
 
 
 ## Installation & launching  
