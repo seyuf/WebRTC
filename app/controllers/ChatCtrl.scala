@@ -1,63 +1,80 @@
 package controllers
 
-import java.util.concurrent.TimeUnit
-
-import akka.actor.Props
-import akka.pattern.ask
-import models.{Quit, Talk, Join, ChatRoom}
-import play.api.libs.concurrent.Akka
-import play.api.libs.iteratee.{Enumeratee, Iteratee, Enumerator}
+import javax.inject.Inject
+import akka.actor.ActorSystem
+import akka.stream.Materializer
+import models.actors.{ ChatActor, ChatActorFactory }
+import play.api.Logger
+import play.api.i18n.{ I18nSupport, MessagesApi }
+import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.JsValue
-import play.api.mvc.{WebSocket, Controller}
-import akka.util.Timeout
+import play.api.libs.streams.ActorFlow
+import play.api.mvc._
+import play.modules.reactivemongo.{ MongoController, ReactiveMongoApi, ReactiveMongoComponents }
 
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json._
 import scala.concurrent.Future
 
-// Reactive Mongo imports
-import reactivemongo.api._
+import javax.inject.Inject
 
-// Reactive Mongo plugin, including the JSON-specialized collection
-import play.modules.reactivemongo.MongoController
+import scala.concurrent.{ ExecutionContext, Future }
+
+import play.api.mvc.{ Action, Controller, WebSocket }
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.{ Json, JsObject, JsValue }
+import play.api.libs.iteratee.{ Enumerator, Iteratee }
+
+import reactivemongo.api.{ Cursor, QueryOpts }
+import play.modules.reactivemongo.{
+  MongoController,
+  ReactiveMongoApi,
+  ReactiveMongoComponents
+}
 import play.modules.reactivemongo.json.collection.JSONCollection
 
+class ChatCtrl @Inject() (
+    val messagesApi: MessagesApi,
+    implicit val mat: Materializer,
+    implicit val actorSystem: ActorSystem,
+    val chatActorFactory: ChatActorFactory,
+    val reactiveMongoApi: ReactiveMongoApi
+) extends Controller with I18nSupport with MongoController with ReactiveMongoComponents {
 
+  // BSON-JSON conversions
+  import play.modules.reactivemongo.json._, ImplicitBSONHandlers._
+  val log = Logger("WTRC." + this.getClass.getSimpleName);
 
-import play.api.Play.current
-import play.api.libs.concurrent.Execution.Implicits._
-/**
- * Created by madalien on 31/05/15.
- */
-object ChatCtrl extends Controller with MongoController{
+  // BSON-JSON conversions
+  import play.modules.reactivemongo.json._, ImplicitBSONHandlers._
 
+  // let's be sure that the collections exists and is capped
+  val futureCollection: Future[JSONCollection] = {
+    val db = reactiveMongoApi.db
+    val collection = db.collection[JSONCollection]("acappedcollection")
 
-
-
-  def collection: JSONCollection = db.collection[JSONCollection]("livetchat")
-
-
-
-
-  def filter(eventRoom: String) = Enumeratee.filter[JsValue]{  json: JsValue =>
-    eventRoom == (json\"eventRoom").as[String]
+    collection.stats().flatMap {
+      case stats if !stats.capped =>
+        // the collection is not capped, so we convert it
+        println("converting to capped")
+        collection.convertToCapped(1024 * 1024, None)
+      case _ => Future(collection)
+    }.recover {
+      // the collection does not exist, so we create it
+      case _ =>
+        println("creating capped collection...")
+        collection.createCapped(1024 * 1024, None)
+    }.map { _ =>
+      println("the capped collection is available")
+      collection
+    }
   }
 
-  implicit val timeout = Timeout(1, TimeUnit.SECONDS)
-
-  lazy val chatroomActor = Akka.system.actorOf(Props(new ChatRoom(collection)))
-  def chat(eventRoom: String, username: String) = WebSocket.async[JsValue] {
-    request => {
-      (chatroomActor ? Join(username, eventRoom)) map {
-        // grab the Enumerator from ChatRoom:
-        case out: Enumerator[JsValue] =>
-          val in = Iteratee.foreach[JsValue] {
-            event => chatroomActor ! Talk(username, (event \ "text").as[String], eventRoom)
-          }.map { _ =>
-            chatroomActor ! Quit(username, eventRoom)
-          }
-          (in, out &> filter(eventRoom))
+  def chat(eventName: String, username: String, token: Option[String]) = WebSocket.accept[JsValue, JsValue] {
+    request =>
+      {
+        //log.debug(s"new query string:  ${request.getQueryString("X-Auth-Token")}")
+        //val tmpRequest = request.copy(headers = new Headers(Seq("X-Auth-Token" -> token)))
+        //implicit val req = Request(tmpRequest, AnyContentAsEmpty)
+        ActorFlow.actorRef(chatActorFactory.props(username, eventName, _))
       }
-    }
   }
 }

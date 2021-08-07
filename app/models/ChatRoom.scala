@@ -1,12 +1,12 @@
 package models
-
-import akka.actor.{Actor, ReceiveTimeout}
+/*
+import akka.actor.{ Actor, ReceiveTimeout }
 import akka.actor._
-import com.google.common.collect.{EvictingQueue, ImmutableList}
+import com.google.common.collect.{ EvictingQueue, ImmutableList }
 import org.joda.time.DateTime
 import play.api.Logger
 import play.api.libs.iteratee.Concurrent
-import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
+import play.api.libs.json.{ JsArray, JsObject, JsString, JsValue, Json }
 import play.api.libs.json.Reads._
 
 import scala.collection.mutable
@@ -15,25 +15,21 @@ import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits._
 
 import javax.annotation.concurrent.Immutable
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.language.postfixOps
 
 // Reactive Mongo plugin, including the JSON-specialized collection
 import play.modules.reactivemongo.json.collection.JSONCollection
 
-
-
 /**
  * Created by madalien on 31/05/15.
  */
-
 
 case class Join(username: String, eventRoom: String)
 case class Quit(username: String, eventRoom: String)
 case class Talk(username: String, text: String, eventRoom: String)
 class ChatRoom(tchatCol: JSONCollection) extends Actor {
   var members = Set.empty[String]
-
 
   val logger = Logger("WBS." + this.getClass.getSimpleName)
   var isTextCollectionEmpty = true
@@ -42,9 +38,9 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
   val chatBot = "LeBot"
   context.setReceiveTimeout(600 seconds)
 
-
   def receive = {
-    case Join(username, eventRoom) => { members = members + username
+    case Join(username, eventRoom) => {
+      members = members + username
       broadcastMessage(chatBot, s"$username has joined", eventRoom)
       sender ! chatEnumerator
     }
@@ -54,7 +50,6 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
       //members = members - username
     }
     case Talk(username, text, eventRoom) => broadcastMessage(username, text, eventRoom)
-
 
     /*
   case ReceiveTimeout =>{
@@ -73,7 +68,7 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
     import play.modules.reactivemongo.json._, ImplicitBSONHandlers._
 
     import play.api.libs.json._
-    if(isTextCollectionEmpty){
+    if (isTextCollectionEmpty) {
       val resList: Future[List[JsObject]] = tchatCol
         .find(Json.obj())
         .sort(Json.obj("$natural" -> 1))
@@ -84,7 +79,7 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
 
       // }
 
-      val  curTestList = Await.result(resList, 10 seconds)
+      val curTestList = Await.result(resList, 10 seconds)
       curTestList.take(1000).foreach(text => textCollection.add(text))
 
       isTextCollectionEmpty = false
@@ -93,7 +88,7 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
     }
 
     if (user != "LeBot" && text.nonEmpty) {
-      val  curJsMsg = Json.obj(
+      val curJsMsg = Json.obj(
         "user" -> user,
         "text" -> text,
         "timeStamp" -> DateTime.now().getMillis
@@ -102,7 +97,7 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
         curJsMsg
       )
 
-      tchatCol.insert(curJsMsg).map(lastError=> logger.debug(s"Insert logs: $lastError"))
+      tchatCol.insert(curJsMsg).map(lastError => logger.debug(s"Insert logs: $lastError"))
 
     }
     var msg: JsObject = Json.obj(
@@ -114,7 +109,7 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
     )
 
     var curJsArr = Json.arr()
-    textCollection.toArray().foreach{
+    textCollection.toArray().foreach {
       case elem: JsObject => curJsArr = curJsArr :+ elem
     }
 
@@ -125,3 +120,4 @@ class ChatRoom(tchatCol: JSONCollection) extends Actor {
     chatChannel.push(msg)
   }
 }
+*/

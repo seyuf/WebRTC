@@ -86,8 +86,8 @@ angular.module('cc.services.chat',[])
 
       ws.onOpen(function() {
         console.log('connection open');
-        var openJson = {username: username, text: ''};
-        ws.send(JSON.stringify(openJson));
+        //var openJson = {username: username, text: 'Greetings'};
+        //ws.send(JSON.stringify(openJson));
       });
 
       var returnObj = {

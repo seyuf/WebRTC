@@ -5,7 +5,7 @@ package services
  */
 
 import jp.t2v.lab.play2.auth._
-import play.api.mvc.{Cookie, RequestHeader, Result}
+import play.api.mvc.{ Cookie, RequestHeader, Result }
 
 class CustomCookieAccessor(maxAge: Int) extends CookieTokenAccessor() {
 
@@ -15,6 +15,5 @@ class CustomCookieAccessor(maxAge: Int) extends CookieTokenAccessor() {
     val c = Cookie(cookieName, sign(token), _maxAge, cookiePathOption, cookieDomainOption, cookieSecureOption, cookieHttpOnlyOption)
     result.withCookies(c)
   }
-
 
 }
